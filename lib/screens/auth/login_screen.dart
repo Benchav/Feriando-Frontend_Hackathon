@@ -56,8 +56,8 @@ class _LoginScreenState extends State<LoginScreen> {
               children: [
                 const SizedBox(height: 48),
                 Container(
-                  width: 84,
-                  height: 84,
+                  width: 84, 
+                  height: 84, 
                   alignment: Alignment.center,
                   decoration: const BoxDecoration(color: AppColors.verdeMilpa, shape: BoxShape.circle),
                   child: const Icon(Icons.sync_alt_rounded, color: Colors.white, size: 40),
