@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../catalogo/catalogo_screen.dart';
 import '../productos/mis_productos_screen.dart';
 import '../trueques/trueques_screen.dart';
@@ -14,11 +14,11 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _indice = 0;
 
-  final _pantallas = const [
-    CatalogoScreen(),
-    MisProductosScreen(),
-    TruequesScreen(),
-    PerfilScreen(),
+  final _pantallas = [
+    const CatalogoScreen(),
+    const MisProductosScreen(),
+    const TruequesScreen(),
+    const PerfilScreen(),
   ];
 
   @override

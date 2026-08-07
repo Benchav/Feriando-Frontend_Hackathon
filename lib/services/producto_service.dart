@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import '../models/producto.dart';
 import 'api_client.dart';
 
@@ -39,12 +41,24 @@ class ProductoService {
 
   /// CREATE
   Future<Producto> crear(ProductoFormulario formulario) async {
+    if (formulario.imagenesArchivos != null && formulario.imagenesArchivos!.isNotEmpty) {
+      final fields = formulario.toCreateJson().map((key, value) => MapEntry(key, value?.toString() ?? ''));
+      final files = formulario.imagenesArchivos!.map((path) => File(path)).toList();
+      final data = await _api.postMultipart('/productos', fields: fields, files: files);
+      return Producto.fromJson(data);
+    }
     final data = await _api.post('/productos', formulario.toCreateJson());
     return Producto.fromJson(data);
   }
 
   /// UPDATE
   Future<void> actualizar(int id, ProductoFormulario formulario) async {
+    if (formulario.imagenesArchivos != null && formulario.imagenesArchivos!.isNotEmpty) {
+      final fields = formulario.toUpdateJson().map((key, value) => MapEntry(key, value?.toString() ?? ''));
+      final files = formulario.imagenesArchivos!.map((path) => File(path)).toList();
+      await _api.putMultipart('/productos/$id', fields: fields, files: files);
+      return;
+    }
     await _api.put('/productos/$id', formulario.toUpdateJson());
   }
 
