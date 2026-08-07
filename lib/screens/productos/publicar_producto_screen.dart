@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../../models/catalogos.dart';
 import '../../models/producto.dart';
@@ -32,10 +35,13 @@ class _PublicarProductoScreenState extends State<PublicarProductoScreen> {
   final _direccionExacta = TextEditingController();
 
   final CatalogoService _catalogoService = CatalogoService();
+  final ImagePicker _picker = ImagePicker();
+
   List<Categoria> _categorias = [];
   List<UnidadMedida> _unidades = [];
   List<Departamento> _departamentos = [];
   List<Municipio> _municipiosDisponibles = [];
+  final List<XFile> _imagenesSeleccionadas = [];
 
   Categoria? _categoriaSeleccionada;
   UnidadMedida? _unidadSeleccionada;
@@ -44,6 +50,7 @@ class _PublicarProductoScreenState extends State<PublicarProductoScreen> {
 
   String _tipoOferta = 'Trueque';
   bool _cargandoCatalogos = true;
+  String? _errorCargaCatalogos;
   bool _guardando = false;
 
   @override
@@ -99,9 +106,12 @@ class _PublicarProductoScreenState extends State<PublicarProductoScreen> {
         }
         _cargandoCatalogos = false;
       });
-    } catch (_) {
+    } catch (e) {
       if (mounted) {
-        setState(() => _cargandoCatalogos = false);
+        setState(() {
+          _cargandoCatalogos = false;
+          _errorCargaCatalogos = e.toString();
+        });
       }
     }
   }
@@ -111,6 +121,20 @@ class _PublicarProductoScreenState extends State<PublicarProductoScreen> {
       _departamentoSeleccionado = dep;
       _municipioSeleccionado = null;
       _municipiosDisponibles = dep?.municipios ?? [];
+    });
+  }
+
+  Future<void> _seleccionarImagenes() async {
+    final resultados = await _picker.pickMultiImage(imageQuality: 70, maxWidth: 1200);
+    if (resultados.isEmpty) return;
+    setState(() {
+      _imagenesSeleccionadas.addAll(resultados);
+    });
+  }
+
+  void _eliminarImagen(int index) {
+    setState(() {
+      _imagenesSeleccionadas.removeAt(index);
     });
   }
 
@@ -143,6 +167,7 @@ class _PublicarProductoScreenState extends State<PublicarProductoScreen> {
           : _direccionExacta.text.trim(),
       tipoOferta: _tipoOferta,
       precioReferencial: _precio.text.trim().isEmpty ? null : double.tryParse(_precio.text),
+      imagenesArchivos: _imagenesSeleccionadas.map((e) => e.path).toList(),
     );
 
     try {
@@ -170,7 +195,38 @@ class _PublicarProductoScreenState extends State<PublicarProductoScreen> {
       appBar: AppBar(title: Text(widget.esEdicion ? 'Editar producto' : 'Publicar producto')),
       body: _cargandoCatalogos
           ? const Center(child: CircularProgressIndicator(color: AppColors.verdeMilpa))
-          : Padding(
+          : _errorCargaCatalogos != null
+              ? Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.error_outline, size: 48, color: AppColors.error),
+                        const SizedBox(height: 12),
+                        Text('Error cargando datos', style: AppTextStyles.h3),
+                        const SizedBox(height: 8),
+                        Text(
+                          _errorCargaCatalogos!,
+                          textAlign: TextAlign.center,
+                          style: AppTextStyles.caption.copyWith(color: AppColors.textoSecundario),
+                        ),
+                        const SizedBox(height: 18),
+                        ElevatedButton(
+                          onPressed: () {
+                            setState(() {
+                              _cargandoCatalogos = true;
+                              _errorCargaCatalogos = null;
+                            });
+                            _cargarCatalogos();
+                          },
+                          child: const Text('Reintentar'),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              : Padding(
               padding: const EdgeInsets.all(20),
               child: Form(
                 key: _formKey,
@@ -188,9 +244,67 @@ class _PublicarProductoScreenState extends State<PublicarProductoScreen> {
                       maxLineas: 3,
                     ),
                     const SizedBox(height: 14),
+                    Text('Imágenes del producto', style: AppTextStyles.etiqueta),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 8,
+                      alignment: WrapAlignment.start,
+                      children: [
+                        ElevatedButton.icon(
+                          onPressed: _seleccionarImagenes,
+                          icon: const Icon(Icons.photo_library),
+                          label: const Text('Seleccionar imágenes'),
+                        ),
+                        if (_imagenesSeleccionadas.isNotEmpty)
+                          Text('${_imagenesSeleccionadas.length} seleccionadas', style: AppTextStyles.caption),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    if (_imagenesSeleccionadas.isNotEmpty)
+                      SizedBox(
+                        height: 120,
+                        child: ListView.separated(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: _imagenesSeleccionadas.length,
+                          separatorBuilder: (_, __) => const SizedBox(width: 10),
+                          itemBuilder: (_, index) {
+                            final imagen = _imagenesSeleccionadas[index];
+                            return Stack(
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(14),
+                                  child: Image.file(
+                                    File(imagen.path),
+                                    width: 120,
+                                    height: 120,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                                Positioned(
+                                  top: 4,
+                                  right: 4,
+                                  child: InkWell(
+                                    onTap: () => _eliminarImagen(index),
+                                    child: Container(
+                                      decoration: const BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: Colors.black54,
+                                      ),
+                                      padding: const EdgeInsets.all(4),
+                                      child: const Icon(Icons.close, size: 16, color: Colors.white),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        ),
+                      ),
+                    const SizedBox(height: 14),
                     if (!widget.esEdicion) ...[
                       DropdownButtonFormField<Categoria>(
-                        value: _categoriaSeleccionada,
+                        initialValue: _categoriaSeleccionada,
                         decoration: const InputDecoration(labelText: 'Categoría'),
                         items: _categorias
                             .map((c) => DropdownMenuItem(value: c, child: Text(c.nombre)))
@@ -213,7 +327,7 @@ class _PublicarProductoScreenState extends State<PublicarProductoScreen> {
                           const SizedBox(width: 12),
                           Expanded(
                             child: DropdownButtonFormField<UnidadMedida>(
-                              value: _unidadSeleccionada,
+                              initialValue: _unidadSeleccionada,
                               decoration: const InputDecoration(labelText: 'Unidad'),
                               items: _unidades
                                   .map((u) => DropdownMenuItem(value: u, child: Text(u.nombre)))
@@ -233,7 +347,7 @@ class _PublicarProductoScreenState extends State<PublicarProductoScreen> {
                       children: [
                         Expanded(
                           child: DropdownButtonFormField<Departamento>(
-                            value: _departamentoSeleccionado,
+                            initialValue: _departamentoSeleccionado,
                             isExpanded: true,
                             decoration: const InputDecoration(labelText: 'Departamento'),
                             items: _departamentos
@@ -245,7 +359,7 @@ class _PublicarProductoScreenState extends State<PublicarProductoScreen> {
                         const SizedBox(width: 12),
                         Expanded(
                           child: DropdownButtonFormField<Municipio>(
-                            value: _municipioSeleccionado,
+                            initialValue: _municipioSeleccionado,
                             isExpanded: true,
                             decoration: const InputDecoration(labelText: 'Municipio'),
                             items: _municipiosDisponibles

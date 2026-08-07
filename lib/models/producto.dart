@@ -67,6 +67,7 @@ class ProductoFormulario {
   String tipoOferta;
   double? precioReferencial;
   List<String>? urlsImagenes;
+  List<String>? imagenesArchivos;
 
   ProductoFormulario({
     this.categoriaID,
@@ -79,6 +80,7 @@ class ProductoFormulario {
     this.tipoOferta = 'Trueque',
     this.precioReferencial,
     this.urlsImagenes,
+    this.imagenesArchivos,
   });
 
   Map<String, dynamic> toCreateJson() => {
