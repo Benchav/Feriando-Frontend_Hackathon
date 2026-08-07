@@ -77,6 +77,7 @@ class _MisProductosScreenState extends State<MisProductosScreen> {
           await Navigator.of(context).push(
             MaterialPageRoute(builder: (_) => const PublicarProductoScreen()),
           );
+          // ignore: use_build_context_synchronously
           if (mounted) context.read<ProductoProvider>().cargarMios();
         },
       ),
@@ -148,6 +149,7 @@ class _MisProductosScreenState extends State<MisProductosScreen> {
                                           builder: (_) => PublicarProductoScreen(productoExistente: producto),
                                         ),
                                       );
+                                      // ignore: use_build_context_synchronously
                                       if (mounted) context.read<ProductoProvider>().cargarMios();
                                     },
                                   ),

@@ -7,7 +7,7 @@ import '../../services/catalogo_service.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 import '../../widgets/app_button.dart';
-import '../../widgets/app_text_field.dart';
+import '../../widgets/app_text_field.dart'; 
 
 class RegistroScreen extends StatefulWidget {
   const RegistroScreen({super.key});
@@ -168,7 +168,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
               else ...[
                 // Dropdown 1: Departamento
                 DropdownButtonFormField<Departamento>(
-                  value: _departamentoSeleccionado,
+                  initialValue: _departamentoSeleccionado,
                   decoration: const InputDecoration(labelText: 'Departamento'),
                   items: _departamentos
                       .map((d) => DropdownMenuItem(value: d, child: Text(d.nombre)))
@@ -180,7 +180,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
 
                 // Dropdown 2: Municipio (en cascada)
                 DropdownButtonFormField<Municipio>(
-                  value: _municipioSeleccionado,
+                  initialValue: _municipioSeleccionado,
                   decoration: const InputDecoration(labelText: 'Municipio'),
                   items: _municipiosDisponibles
                       .map((m) => DropdownMenuItem(value: m, child: Text(m.nombre)))
@@ -202,7 +202,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
 
                 // Dropdown 3: Idioma (Opcional)
                 DropdownButtonFormField<Idioma>(
-                  value: _idiomaSeleccionado,
+                  initialValue: _idiomaSeleccionado,
                   decoration: const InputDecoration(labelText: 'Idioma preferido (opcional)'),
                   items: _idiomas
                       .map((i) => DropdownMenuItem(value: i, child: Text(i.nombre)))
@@ -227,7 +227,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
                 contentPadding: EdgeInsets.zero,
                 value: _esProductora,
                 onChanged: (v) => setState(() => _esProductora = v),
-                activeColor: AppColors.verdeMilpa,
+                activeThumbColor: AppColors.verdeMilpa,
                 title: const Text('Voy a publicar productos para trueque'),
                 subtitle: const Text('Puedes cambiarlo luego desde tu perfil'),
               ),

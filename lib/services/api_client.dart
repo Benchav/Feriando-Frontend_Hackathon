@@ -17,7 +17,7 @@ class ApiClient {
   /// Emulador Android: 10.0.2.2 apunta al localhost de la PC.
   /// Celular físico por USB: usa la IP local de tu PC, ej. http://192.168.0.11:5080
 
-static const String baseUrl = 'http://192.168.0.11:5080/api';
+static const String baseUrl = 'http://192.168.100.8.:5080/api';
 
   Future<Map<String, String>> _headers({bool conAuth = true}) async {
     final headers = {'Content-Type': 'application/json'};

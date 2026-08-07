@@ -168,12 +168,14 @@ class _SolicitarTruequeScreenState extends State<SolicitarTruequeScreen> {
                             return RadioListTile<Producto>(
                               contentPadding: EdgeInsets.zero,
                               value: p,
+                              // ignore: deprecated_member_use
                               groupValue: _productoOfrecido,
                               activeColor: AppColors.verdeMilpa,
                               title: Text(p.nombre),
                               subtitle: Text(
                                 '${p.cantidad} ${p.unidadMedida}${ubicacionPropia.isNotEmpty ? ' · $ubicacionPropia' : ''}',
                               ),
+                              // ignore: deprecated_member_use
                               onChanged: (v) => setState(() => _productoOfrecido = v),
                             );
                           }).toList(),

@@ -161,7 +161,7 @@ class _CatalogoScreenState extends State<CatalogoScreen> {
                       children: [
                         Expanded(
                           child: DropdownButtonFormField<Departamento>(
-                            value: _departamentoSeleccionado,
+                            initialValue: _departamentoSeleccionado,
                             isExpanded: true,
                             decoration: const InputDecoration(
                               labelText: 'Departamento',
@@ -176,7 +176,7 @@ class _CatalogoScreenState extends State<CatalogoScreen> {
                         const SizedBox(width: 8),
                         Expanded(
                           child: DropdownButtonFormField<Municipio>(
-                            value: _municipioSeleccionado,
+                            initialValue: _municipioSeleccionado,
                             isExpanded: true,
                             decoration: const InputDecoration(
                               labelText: 'Municipio',

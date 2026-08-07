@@ -190,7 +190,7 @@ class _PublicarProductoScreenState extends State<PublicarProductoScreen> {
                     const SizedBox(height: 14),
                     if (!widget.esEdicion) ...[
                       DropdownButtonFormField<Categoria>(
-                        value: _categoriaSeleccionada,
+                        initialValue: _categoriaSeleccionada,
                         decoration: const InputDecoration(labelText: 'Categoría'),
                         items: _categorias
                             .map((c) => DropdownMenuItem(value: c, child: Text(c.nombre)))
@@ -213,7 +213,7 @@ class _PublicarProductoScreenState extends State<PublicarProductoScreen> {
                           const SizedBox(width: 12),
                           Expanded(
                             child: DropdownButtonFormField<UnidadMedida>(
-                              value: _unidadSeleccionada,
+                              initialValue: _unidadSeleccionada,
                               decoration: const InputDecoration(labelText: 'Unidad'),
                               items: _unidades
                                   .map((u) => DropdownMenuItem(value: u, child: Text(u.nombre)))
@@ -233,7 +233,7 @@ class _PublicarProductoScreenState extends State<PublicarProductoScreen> {
                       children: [
                         Expanded(
                           child: DropdownButtonFormField<Departamento>(
-                            value: _departamentoSeleccionado,
+                            initialValue: _departamentoSeleccionado,
                             isExpanded: true,
                             decoration: const InputDecoration(labelText: 'Departamento'),
                             items: _departamentos
@@ -245,7 +245,7 @@ class _PublicarProductoScreenState extends State<PublicarProductoScreen> {
                         const SizedBox(width: 12),
                         Expanded(
                           child: DropdownButtonFormField<Municipio>(
-                            value: _municipioSeleccionado,
+                            initialValue: _municipioSeleccionado,
                             isExpanded: true,
                             decoration: const InputDecoration(labelText: 'Municipio'),
                             items: _municipiosDisponibles
