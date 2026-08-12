@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/producto.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/language_provider.dart';
 import '../../services/producto_service.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
@@ -45,13 +46,14 @@ class _DetalleProductoScreenState extends State<DetalleProductoScreen> {
   @override
   Widget build(BuildContext context) {
     final usuarioActualID = context.read<AuthProvider>().usuario?.usuarioID;
+    final lang = context.watch<LanguageProvider>();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Detalle del producto')),
+      appBar: AppBar(title: Text(lang.translate('product_detail_title'))),
       body: _cargando
           ? const Center(child: CircularProgressIndicator(color: AppColors.verdeMilpa))
           : _producto == null
-              ? const Center(child: Text('No se encontró el producto.'))
+              ? Center(child: Text(lang.translate('product_not_found')))
               : SafeArea(
                   child: Column(
                     children: [
@@ -59,15 +61,38 @@ class _DetalleProductoScreenState extends State<DetalleProductoScreen> {
                         child: ListView(
                           padding: const EdgeInsets.all(20),
                           children: [
-                            Container(
-                              height: 180,
-                              alignment: Alignment.center,
-                              decoration: BoxDecoration(
-                                color: AppColors.verdeMilpaSuave,
-                                borderRadius: BorderRadius.circular(16),
+                            if (_producto!.imagenes.isNotEmpty)
+                              SizedBox(
+                                height: 220,
+                                child: PageView.builder(
+                                  itemCount: _producto!.imagenes.length,
+                                  itemBuilder: (context, index) {
+                                    final url = _producto!.imagenUrl(index);
+                                    return ClipRRect(
+                                      borderRadius: BorderRadius.circular(16),
+                                      child: Image.network(
+                                        url,
+                                        fit: BoxFit.cover,
+                                        width: double.infinity,
+                                        errorBuilder: (_, __, ___) => Container(
+                                          color: AppColors.verdeMilpaSuave,
+                                          child: const Icon(Icons.broken_image_outlined, size: 64, color: AppColors.verdeMilpa),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              )
+                            else
+                              Container(
+                                height: 180,
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  color: AppColors.verdeMilpaSuave,
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: const Icon(Icons.storefront, size: 64, color: AppColors.verdeMilpa),
                               ),
-                              child: const Icon(Icons.storefront, size: 64, color: AppColors.verdeMilpa),
-                            ),
                             const SizedBox(height: 20),
                             Row(
                               children: [
@@ -82,7 +107,7 @@ class _DetalleProductoScreenState extends State<DetalleProductoScreen> {
                             ),
                             const SizedBox(height: 16),
                             if (_producto!.descripcion != null && _producto!.descripcion!.isNotEmpty) ...[
-                              Text('Descripción', style: AppTextStyles.etiqueta),
+                              Text(lang.translate('product_description'), style: AppTextStyles.etiqueta),
                               const SizedBox(height: 4),
                               Text(_producto!.descripcion!, style: AppTextStyles.cuerpo),
                               const SizedBox(height: 16),
@@ -111,7 +136,7 @@ class _DetalleProductoScreenState extends State<DetalleProductoScreen> {
                                           crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
                                             Text(_producto!.nombreProductora, style: AppTextStyles.cuerpoDestacado),
-                                            Text('Productor(a)', style: AppTextStyles.caption),
+                                            Text(lang.translate('product_seller'), style: AppTextStyles.caption),
                                           ],
                                         ),
                                       ),
@@ -144,7 +169,7 @@ class _DetalleProductoScreenState extends State<DetalleProductoScreen> {
                             Wrap(
                               spacing: 8,
                               children: [
-                                Chip(label: Text('Oferta: ${_producto!.tipoOferta}')),
+                                Chip(label: Text('${lang.translate('product_offer')} ${_producto!.tipoOferta}')),
                                 if (_producto!.precioReferencial != null)
                                   Chip(label: Text('C\$ ${_producto!.precioReferencial!.toStringAsFixed(0)}')),
                               ],
@@ -156,7 +181,7 @@ class _DetalleProductoScreenState extends State<DetalleProductoScreen> {
                         Padding(
                           padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
                           child: AppButton(
-                            texto: 'Solicitar trueque',
+                            texto: lang.translate('request_swap'),
                             icono: Icons.sync_alt,
                             onPressed: () => Navigator.of(context).push(
                               MaterialPageRoute(

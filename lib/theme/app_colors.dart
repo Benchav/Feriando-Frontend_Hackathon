@@ -1,36 +1,31 @@
 import 'package:flutter/material.dart';
 
-/// Paleta de "El Trueque".
-/// Inspirada en la milpa, el añil de los tejidos y el achiote del mercado
-/// campesino, con alto contraste para buena legibilidad al aire libre.
 class AppColors {
   AppColors._();
 
-  // Marca
-  static const Color verdeMilpa = Color(0xFF4F7A5B); // primario
-  static const Color verdeMilpaSuave = Color(0xFFE4EFE1); // fondo/realce primario
-  static const Color achiote = Color(0xFFE0873B); // acento cálido (trueque)
-  static const Color anil = Color(0xFF3D5A73); // acento frío (secundario)
-  static const Color rosaCadena = Color(0xFFD66E86); // acento enfoque de género
+  static const Color verdeMilpa = Color(0xFF1F5D3A);
+  static const Color verdeFresco = Color(0xFF6FAE3E);
+  static const Color naranjaFeria = Color(0xFFE8702A);
+  static const Color rojoTomate = Color.fromARGB(255, 214, 155, 150);
+  static const Color amarilloMaiz = Color(0xFFF5B720);
+  static const Color cremaTortilla = Color(0xFFFBF3E4);
+  static const Color cafeTierra = Color(0xFF4A2E1F);
 
-  // Base
-  static const Color fondo = Color(0xFFFBF7F1); // fondo general (scaffold)
-  static const Color superficie = Color(0xFFFFFFFF); // tarjetas
-  static const Color borde = Color(0xFFE3D9CC); // divisores, bordes suaves
+  static const Color fondo = cremaTortilla;
+  static const Color superficie = Colors.white;
+  static const Color borde = Color(0xFFD7C5AC);
 
-  // Texto
-  static const Color textoPrimario = Color(0xFF3B2F2A);
-  static const Color textoSecundario = Color(0xFF8A7F74);
-  static const Color textoSobreOscuro = Color(0xFFFFFFFF);
+  static const Color textoPrimario = cafeTierra;
+  static const Color textoSecundario = Color(0xFF7A6148);
+  static const Color textoSobreClaro = Colors.white;
+  static const Color textoSobreOscuro = Colors.white;
 
-  // Estados
-  static const Color exito = Color(0xFF4F7A5B); // reutiliza verde milpa
-  static const Color advertencia = Color(0xFFE0873B); // reutiliza achiote
-  static const Color error = Color(0xFFB5473A);
+  static const Color exito = verdeFresco;
+  static const Color advertencia = amarilloMaiz;
+  static const Color error = rojoTomate;
 
-  // Estados de un producto (coherentes con la base de datos)
-  static const Color estadoDisponible = verdeMilpa;
-  static const Color estadoReservado = achiote;
-  static const Color estadoIntercambiado = anil;
-  static const Color estadoInactivo = textoSecundario;
+  // Backward-compatible color aliases
+  static const Color verdeMilpaSuave = Color(0xFFE4EFE1);
+  static const Color achiote = naranjaFeria;
+  static const Color anil = Color(0xFF3D5A73);
 }

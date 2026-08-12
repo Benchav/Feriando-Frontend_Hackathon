@@ -92,18 +92,18 @@ class UnidadMedida {
 class Idioma {
   final int idiomaID;
   final String nombre;
-  final String? codigo;
+  final String codigo;
 
-  Idioma({
+  const Idioma({
     required this.idiomaID,
     required this.nombre,
-    this.codigo,
+    required this.codigo,
   });
 
   factory Idioma.fromJson(Map<String, dynamic> json) => Idioma(
         idiomaID: json['idiomaID'],
         nombre: json['nombre'],
-        codigo: json['codigo'],
+        codigo: json['codigo'] ?? '',
       );
 
   @override

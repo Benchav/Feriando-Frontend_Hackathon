@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../../models/catalogos.dart';
 import '../../models/producto.dart';
+import '../../providers/language_provider.dart';
 import '../../providers/producto_provider.dart';
 import '../../services/api_client.dart';
 import '../../services/catalogo_service.dart';
@@ -42,6 +43,8 @@ class _PublicarProductoScreenState extends State<PublicarProductoScreen> {
   List<Departamento> _departamentos = [];
   List<Municipio> _municipiosDisponibles = [];
   final List<XFile> _imagenesSeleccionadas = [];
+  final List<String> _imagenesActuales = [];
+  List<String> _imagenesOriginales = [];
 
   Categoria? _categoriaSeleccionada;
   UnidadMedida? _unidadSeleccionada;
@@ -79,6 +82,8 @@ class _PublicarProductoScreenState extends State<PublicarProductoScreen> {
     _precio.text = p.precioReferencial?.toString() ?? '';
     _direccionExacta.text = '';
     _tipoOferta = p.tipoOferta;
+    _imagenesOriginales = List<String>.from(p.imagenes);
+    _imagenesActuales.addAll(_imagenesOriginales);
   }
 
   Future<void> _cargarCatalogos() async {
@@ -138,23 +143,39 @@ class _PublicarProductoScreenState extends State<PublicarProductoScreen> {
     });
   }
 
+  void _eliminarImagenActual(int index) {
+    setState(() {
+      _imagenesActuales.removeAt(index);
+    });
+  }
+
   Future<void> _guardar() async {
+    final lang = context.read<LanguageProvider>();
     if (!_formKey.currentState!.validate()) return;
     if (!widget.esEdicion && (_categoriaSeleccionada == null || _unidadSeleccionada == null)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Selecciona categoría y unidad de medida.')),
+        SnackBar(content: Text(lang.translate('publish_product_select_category_unit'))),
       );
       return;
     }
 
     if (_departamentoSeleccionado == null || _municipioSeleccionado == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Selecciona el departamento y municipio de ubicación.')),
+        SnackBar(content: Text(lang.translate('publish_product_select_department_municipality'))),
       );
       return;
     }
 
     setState(() => _guardando = true);
+
+    final reemplazarImagenes = widget.esEdicion && (
+      _imagenesSeleccionadas.isNotEmpty ||
+      _imagenesActuales.length != _imagenesOriginales.length ||
+      _imagenesActuales.toSet().length != _imagenesOriginales.toSet().length ||
+      _imagenesActuales.toSet().difference(_imagenesOriginales.toSet()).isNotEmpty ||
+      _imagenesOriginales.toSet().difference(_imagenesActuales.toSet()).isNotEmpty
+    );
+
     final formulario = ProductoFormulario(
       categoriaID: _categoriaSeleccionada?.categoriaID,
       nombre: _nombre.text.trim(),
@@ -167,7 +188,8 @@ class _PublicarProductoScreenState extends State<PublicarProductoScreen> {
           : _direccionExacta.text.trim(),
       tipoOferta: _tipoOferta,
       precioReferencial: _precio.text.trim().isEmpty ? null : double.tryParse(_precio.text),
-      imagenesArchivos: _imagenesSeleccionadas.map((e) => e.path).toList(),
+      reemplazarImagenes: reemplazarImagenes,
+      imagenesXFiles: _imagenesSeleccionadas.toList(),
     );
 
     try {
@@ -181,7 +203,7 @@ class _PublicarProductoScreenState extends State<PublicarProductoScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e is ApiException ? e.mensaje : 'No se pudo guardar el producto.')),
+          SnackBar(content: Text(e is ApiException ? e.mensaje : lang.translate('publish_product_save_error'))),
         );
       }
     } finally {
@@ -191,8 +213,9 @@ class _PublicarProductoScreenState extends State<PublicarProductoScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final lang = context.watch<LanguageProvider>();
     return Scaffold(
-      appBar: AppBar(title: Text(widget.esEdicion ? 'Editar producto' : 'Publicar producto')),
+      appBar: AppBar(title: Text(widget.esEdicion ? lang.translate('edit_product_title') : lang.translate('publish_product_title'))),
       body: _cargandoCatalogos
           ? const Center(child: CircularProgressIndicator(color: AppColors.verdeMilpa))
           : _errorCargaCatalogos != null
@@ -204,7 +227,7 @@ class _PublicarProductoScreenState extends State<PublicarProductoScreen> {
                       children: [
                         const Icon(Icons.error_outline, size: 48, color: AppColors.error),
                         const SizedBox(height: 12),
-                        Text('Error cargando datos', style: AppTextStyles.h3),
+                        Text(lang.translate('publish_product_error_loading'), style: AppTextStyles.h3),
                         const SizedBox(height: 8),
                         Text(
                           _errorCargaCatalogos!,
@@ -220,7 +243,7 @@ class _PublicarProductoScreenState extends State<PublicarProductoScreen> {
                             });
                             _cargarCatalogos();
                           },
-                          child: const Text('Reintentar'),
+                          child: Text(lang.translate('publish_product_retry')),
                         ),
                       ],
                     ),
@@ -233,18 +256,18 @@ class _PublicarProductoScreenState extends State<PublicarProductoScreen> {
                 child: ListView(
                   children: [
                     AppTextField(
-                      etiqueta: 'Nombre del producto',
+                      etiqueta: lang.translate('product_name_label'),
                       controller: _nombre,
-                      validador: (v) => (v == null || v.trim().isEmpty) ? 'Ingresa un nombre' : null,
+                      validador: (v) => (v == null || v.trim().isEmpty) ? lang.translate('enter_name') : null,
                     ),
                     const SizedBox(height: 14),
                     AppTextField(
-                      etiqueta: 'Descripción',
+                      etiqueta: lang.translate('product_description_label'),
                       controller: _descripcion,
                       maxLineas: 3,
                     ),
                     const SizedBox(height: 14),
-                    Text('Imágenes del producto', style: AppTextStyles.etiqueta),
+                    Text(lang.translate('publish_images'), style: AppTextStyles.etiqueta),
                     const SizedBox(height: 8),
                     Wrap(
                       spacing: 12,
@@ -254,13 +277,59 @@ class _PublicarProductoScreenState extends State<PublicarProductoScreen> {
                         ElevatedButton.icon(
                           onPressed: _seleccionarImagenes,
                           icon: const Icon(Icons.photo_library),
-                          label: const Text('Seleccionar imágenes'),
+                          label: Text(lang.translate('publish_select_images')),
                         ),
                         if (_imagenesSeleccionadas.isNotEmpty)
-                          Text('${_imagenesSeleccionadas.length} seleccionadas', style: AppTextStyles.caption),
+                          Text(lang.translate('publish_images_selected').replaceFirst('{count}', _imagenesSeleccionadas.length.toString()), style: AppTextStyles.caption),
                       ],
                     ),
                     const SizedBox(height: 12),
+                    if (widget.esEdicion && _imagenesActuales.isNotEmpty)
+                      SizedBox(
+                        height: 120,
+                        child: ListView.separated(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: _imagenesActuales.length,
+                          separatorBuilder: (_, __) => const SizedBox(width: 10),
+                          itemBuilder: (_, index) {
+                            final imagen = _imagenesActuales[index];
+                            return Stack(
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(14),
+                                  child: Image.network(
+                                    Producto.resolverUrl(imagen),
+                                    width: 120,
+                                    height: 120,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, __, ___) => Container(
+                                      width: 120,
+                                      height: 120,
+                                      color: AppColors.borde,
+                                      child: const Icon(Icons.broken_image_outlined),
+                                    ),
+                                  ),
+                                ),
+                                Positioned(
+                                  top: 4,
+                                  right: 4,
+                                  child: InkWell(
+                                    onTap: () => _eliminarImagenActual(index),
+                                    child: Container(
+                                      decoration: const BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: Colors.black54,
+                                      ),
+                                      padding: const EdgeInsets.all(4),
+                                      child: const Icon(Icons.close, size: 16, color: Colors.white),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        ),
+                      ),
                     if (_imagenesSeleccionadas.isNotEmpty)
                       SizedBox(
                         height: 120,
@@ -305,7 +374,7 @@ class _PublicarProductoScreenState extends State<PublicarProductoScreen> {
                     if (!widget.esEdicion) ...[
                       DropdownButtonFormField<Categoria>(
                         initialValue: _categoriaSeleccionada,
-                        decoration: const InputDecoration(labelText: 'Categoría'),
+                        decoration: InputDecoration(labelText: lang.translate('category_label')),
                         items: _categorias
                             .map((c) => DropdownMenuItem(value: c, child: Text(c.nombre)))
                             .toList(),
@@ -317,10 +386,10 @@ class _PublicarProductoScreenState extends State<PublicarProductoScreen> {
                       children: [
                         Expanded(
                           child: AppTextField(
-                            etiqueta: 'Cantidad',
+                            etiqueta: lang.translate('quantity_label'),
                             controller: _cantidad,
                             tipoTeclado: TextInputType.number,
-                            validador: (v) => (double.tryParse(v ?? '') == null) ? 'Cantidad inválida' : null,
+                            validador: (v) => (double.tryParse(v ?? '') == null) ? lang.translate('invalid_quantity') : null,
                           ),
                         ),
                         if (!widget.esEdicion) ...[
@@ -328,7 +397,7 @@ class _PublicarProductoScreenState extends State<PublicarProductoScreen> {
                           Expanded(
                             child: DropdownButtonFormField<UnidadMedida>(
                               initialValue: _unidadSeleccionada,
-                              decoration: const InputDecoration(labelText: 'Unidad'),
+                              decoration: InputDecoration(labelText: lang.translate('unit_label')),
                               items: _unidades
                                   .map((u) => DropdownMenuItem(value: u, child: Text(u.nombre)))
                                   .toList(),
@@ -341,7 +410,7 @@ class _PublicarProductoScreenState extends State<PublicarProductoScreen> {
                     const SizedBox(height: 18),
                     
                     // Sección de Ubicación Geográfica
-                    Text('Ubicación del producto', style: AppTextStyles.etiqueta),
+                    Text(lang.translate('publish_location'), style: AppTextStyles.etiqueta),
                     const SizedBox(height: 8),
                     Row(
                       children: [
@@ -349,7 +418,7 @@ class _PublicarProductoScreenState extends State<PublicarProductoScreen> {
                           child: DropdownButtonFormField<Departamento>(
                             initialValue: _departamentoSeleccionado,
                             isExpanded: true,
-                            decoration: const InputDecoration(labelText: 'Departamento'),
+                            decoration: InputDecoration(labelText: lang.translate('catalog_department')),
                             items: _departamentos
                                 .map((d) => DropdownMenuItem(value: d, child: Text(d.nombre)))
                                 .toList(),
@@ -361,7 +430,7 @@ class _PublicarProductoScreenState extends State<PublicarProductoScreen> {
                           child: DropdownButtonFormField<Municipio>(
                             initialValue: _municipioSeleccionado,
                             isExpanded: true,
-                            decoration: const InputDecoration(labelText: 'Municipio'),
+                            decoration: InputDecoration(labelText: lang.translate('catalog_municipality')),
                             items: _municipiosDisponibles
                                 .map((m) => DropdownMenuItem(value: m, child: Text(m.nombre)))
                                 .toList(),
@@ -374,18 +443,18 @@ class _PublicarProductoScreenState extends State<PublicarProductoScreen> {
                     ),
                     const SizedBox(height: 14),
                     AppTextField(
-                      etiqueta: 'Comarca / Dirección exacta (Opcional)',
+                      etiqueta: lang.translate('location_exact_optional'),
                       controller: _direccionExacta,
                     ),
 
                     const SizedBox(height: 18),
-                    Text('Tipo de oferta', style: AppTextStyles.etiqueta),
+                    Text(lang.translate('offer_type'), style: AppTextStyles.etiqueta),
                     const SizedBox(height: 6),
                     Wrap(
                       spacing: 8,
                       children: ['Trueque', 'Venta', 'Ambos']
                           .map((t) => ChoiceChip(
-                                label: Text(t),
+                                label: Text(_textoOferta(lang, t)),
                                 selected: _tipoOferta == t,
                                 selectedColor: AppColors.verdeMilpaSuave,
                                 onSelected: (_) => setState(() => _tipoOferta = t),
@@ -395,14 +464,14 @@ class _PublicarProductoScreenState extends State<PublicarProductoScreen> {
                     if (_tipoOferta != 'Trueque') ...[
                       const SizedBox(height: 14),
                       AppTextField(
-                        etiqueta: 'Precio referencial (C\$)',
+                        etiqueta: lang.translate('price_label'),
                         controller: _precio,
                         tipoTeclado: TextInputType.number,
                       ),
                     ],
                     const SizedBox(height: 28),
                     AppButton(
-                      texto: widget.esEdicion ? 'Guardar cambios' : 'Publicar producto',
+                      texto: widget.esEdicion ? lang.translate('publish_product_save') : lang.translate('publish_product_create'),
                       onPressed: _guardar,
                       cargando: _guardando,
                     ),
@@ -411,6 +480,17 @@ class _PublicarProductoScreenState extends State<PublicarProductoScreen> {
               ),
             ),
     );
+  }
+
+  String _textoOferta(LanguageProvider lang, String tipo) {
+    switch (tipo) {
+      case 'Venta':
+        return lang.translate('offer_venta');
+      case 'Ambos':
+        return lang.translate('offer_ambos');
+      default:
+        return lang.translate('offer_trueque');
+    }
   }
 }
 

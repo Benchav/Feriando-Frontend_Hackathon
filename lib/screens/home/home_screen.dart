@@ -1,4 +1,6 @@
 ﻿import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../providers/language_provider.dart';
 import '../catalogo/catalogo_screen.dart';
 import '../productos/mis_productos_screen.dart';
 import '../trueques/trueques_screen.dart';
@@ -23,16 +25,17 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final lang = context.watch<LanguageProvider>();
     return Scaffold(
       body: IndexedStack(index: _indice, children: _pantallas),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _indice,
         onTap: (i) => setState(() => _indice = i),
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.storefront_outlined), activeIcon: Icon(Icons.storefront), label: 'Catálogo'),
-          BottomNavigationBarItem(icon: Icon(Icons.inventory_2_outlined), activeIcon: Icon(Icons.inventory_2), label: 'Mis productos'),
-          BottomNavigationBarItem(icon: Icon(Icons.sync_alt_outlined), activeIcon: Icon(Icons.sync_alt), label: 'Trueques'),
-          BottomNavigationBarItem(icon: Icon(Icons.person_outline), activeIcon: Icon(Icons.person), label: 'Perfil'),
+        items: [
+          BottomNavigationBarItem(icon: const Icon(Icons.storefront_outlined), activeIcon: const Icon(Icons.storefront), label: lang.translate('home_catalog')),
+          BottomNavigationBarItem(icon: const Icon(Icons.inventory_2_outlined), activeIcon: const Icon(Icons.inventory_2), label: lang.translate('home_my_products')),
+          BottomNavigationBarItem(icon: const Icon(Icons.sync_alt_outlined), activeIcon: const Icon(Icons.sync_alt), label: lang.translate('home_trades')),
+          BottomNavigationBarItem(icon: const Icon(Icons.person_outline), activeIcon: const Icon(Icons.person), label: lang.translate('home_profile')),
         ],
       ),
     );

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/producto.dart';
+import '../../providers/language_provider.dart';
 import '../../providers/producto_provider.dart';
 import '../../providers/trueque_provider.dart';
 import '../../services/api_client.dart';
@@ -33,12 +34,16 @@ class _SolicitarTruequeScreenState extends State<SolicitarTruequeScreen> {
   }
 
   void _sugerirLugarInicial() {
+    final lang = context.read<LanguageProvider>();
     final dep = widget.productoDeseado.departamento;
     final mun = widget.productoDeseado.municipio;
     if (mun.isNotEmpty && dep.isNotEmpty) {
-      _lugar.text = 'Centro de $mun, $dep';
+      _lugar.text = lang
+          .translate('location_suggestion_city')
+          .replaceFirst('{city}', mun)
+          .replaceFirst('{department}', dep);
     } else if (dep.isNotEmpty) {
-      _lugar.text = 'Punto céntrico en $dep';
+      _lugar.text = lang.translate('location_suggestion_department').replaceFirst('{department}', dep);
     }
   }
 
@@ -53,9 +58,10 @@ class _SolicitarTruequeScreenState extends State<SolicitarTruequeScreen> {
   }
 
   Future<void> _enviarSolicitud() async {
+    final lang = context.read<LanguageProvider>();
     if (!_esCompra && _productoOfrecido == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Elige qué producto vas a ofrecer.')),
+        SnackBar(content: Text(lang.translate('request_trade_choose_offer'))),
       );
       return;
     }
@@ -70,13 +76,13 @@ class _SolicitarTruequeScreenState extends State<SolicitarTruequeScreen> {
       if (mounted) {
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Solicitud enviada. Espera la respuesta de la productora.')),
+          SnackBar(content: Text(lang.translate('request_trade_sent'))),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e is ApiException ? e.mensaje : 'No se pudo enviar la solicitud.')),
+          SnackBar(content: Text(e is ApiException ? e.mensaje : lang.translate('request_send_error'))),
         );
       }
     } finally {
@@ -93,11 +99,12 @@ class _SolicitarTruequeScreenState extends State<SolicitarTruequeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final lang = context.watch<LanguageProvider>();
     final permiteVenta = widget.productoDeseado.tipoOferta != 'Trueque';
     final ubicacionDeseada = _obtenerUbicacionTexto(widget.productoDeseado);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Solicitar intercambio')),
+      appBar: AppBar(title: Text(lang.translate('request_trade_title'))),
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: ListView(
@@ -117,7 +124,7 @@ class _SolicitarTruequeScreenState extends State<SolicitarTruequeScreen> {
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
-                          'Vas a solicitar: ${widget.productoDeseado.nombre}',
+                          '${lang.translate('requesting_product')} ${widget.productoDeseado.nombre}',
                           style: AppTextStyles.cuerpoDestacado,
                         ),
                       ),
@@ -130,7 +137,7 @@ class _SolicitarTruequeScreenState extends State<SolicitarTruequeScreen> {
                         const Icon(Icons.location_on_outlined, size: 16, color: AppColors.verdeMilpa),
                         const SizedBox(width: 6),
                         Text(
-                          'Ubicación: $ubicacionDeseada',
+                          '${lang.translate('publish_location')}: $ubicacionDeseada',
                           style: AppTextStyles.caption,
                         ),
                       ],
@@ -146,11 +153,11 @@ class _SolicitarTruequeScreenState extends State<SolicitarTruequeScreen> {
                 value: _esCompra,
                 onChanged: (v) => setState(() => _esCompra = v),
                 activeThumbColor: AppColors.verdeMilpa,
-                title: const Text('Comprar directamente'),
-                subtitle: const Text('En vez de ofrecer un producto a cambio'),
+                title: Text(lang.translate('request_trade_buy_directly')),
+                subtitle: Text(lang.translate('request_trade_buy_directly_subtitle')),
               ),
             if (!_esCompra) ...[
-              Text('¿Qué producto ofreces a cambio?', style: AppTextStyles.etiqueta),
+              Text(lang.translate('request_trade_question'), style: AppTextStyles.etiqueta),
               const SizedBox(height: 8),
               _cargandoMios
                   ? const Center(child: CircularProgressIndicator(color: AppColors.verdeMilpa))
@@ -158,7 +165,7 @@ class _SolicitarTruequeScreenState extends State<SolicitarTruequeScreen> {
                       ? Padding(
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           child: Text(
-                            'No tienes productos disponibles. Publica uno primero desde "Mis productos".',
+                            lang.translate('request_trade_no_products'),
                             style: AppTextStyles.cuerpo.copyWith(color: AppColors.textoSecundario),
                           ),
                         )
@@ -183,13 +190,13 @@ class _SolicitarTruequeScreenState extends State<SolicitarTruequeScreen> {
             ],
             const SizedBox(height: 14),
             AppTextField(
-              etiqueta: 'Lugar de encuentro sugerido',
+              etiqueta: lang.translate('location_suggestion'),
               controller: _lugar,
               icono: Icons.place_outlined,
             ),
             const SizedBox(height: 28),
             AppButton(
-              texto: 'Enviar solicitud',
+              texto: lang.translate('send_request'),
               onPressed: _enviarSolicitud,
               cargando: _enviando,
             ),

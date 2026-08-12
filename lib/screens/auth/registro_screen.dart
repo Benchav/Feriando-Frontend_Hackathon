@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/catalogos.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/language_provider.dart';
 import '../../services/api_client.dart';
 import '../../services/catalogo_service.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 import '../../widgets/app_button.dart';
-import '../../widgets/app_text_field.dart'; 
+import '../../widgets/app_text_field.dart';
 
 class RegistroScreen extends StatefulWidget {
   const RegistroScreen({super.key});
@@ -32,9 +33,6 @@ class _RegistroScreenState extends State<RegistroScreen> {
   
   List<Municipio> _municipiosDisponibles = [];
   Municipio? _municipioSeleccionado;
-
-  List<Idioma> _idiomas = [];
-  Idioma? _idiomaSeleccionado;
 
   String _genero = 'F';
   bool _esProductora = true;
@@ -61,11 +59,9 @@ class _RegistroScreenState extends State<RegistroScreen> {
   Future<void> _cargarCatalogosIniciales() async {
     try {
       final deps = await _catalogoService.departamentos();
-      final ids = await _catalogoService.idiomas();
       if (!mounted) return;
       setState(() {
         _departamentos = deps;
-        _idiomas = ids;
         _cargandoCatalogos = false;
       });
     } catch (_) {
@@ -82,10 +78,11 @@ class _RegistroScreenState extends State<RegistroScreen> {
   }
 
   Future<void> _registrar() async {
+    final languageProvider = context.read<LanguageProvider>();
     if (!_formKey.currentState!.validate()) return;
     if (_municipioSeleccionado == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Selecciona tu municipio.')),
+        SnackBar(content: Text(languageProvider.translate('register_select_municipio'))),
       );
       return;
     }
@@ -100,7 +97,6 @@ class _RegistroScreenState extends State<RegistroScreen> {
             genero: _genero,
             municipioID: _municipioSeleccionado!.municipioID,
             direccionExacta: _direccionExacta.text.trim(),
-            idiomaPreferidoID: _idiomaSeleccionado?.idiomaID,
             esProductora: _esProductora,
           );
       if (mounted) Navigator.of(context).pop();
@@ -108,7 +104,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e is ApiException ? e.mensaje : 'No se pudo crear la cuenta.'),
+            content: Text(e is ApiException ? e.mensaje : languageProvider.translate('login_error')),
           ),
         );
       }
@@ -119,8 +115,9 @@ class _RegistroScreenState extends State<RegistroScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final languageProvider = context.watch<LanguageProvider>();
     return Scaffold(
-      appBar: AppBar(title: const Text('Crear cuenta')),
+      appBar: AppBar(title: Text(languageProvider.translate('register_title'))),
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: Form(
@@ -128,35 +125,37 @@ class _RegistroScreenState extends State<RegistroScreen> {
           child: ListView(
             children: [
               AppTextField(
-                etiqueta: 'Nombres',
+                etiqueta: languageProvider.translate('register_names'),
                 controller: _nombres,
-                validador: (v) => (v == null || v.trim().isEmpty) ? 'Ingresa tus nombres' : null,
+                validador: (v) => (v == null || v.trim().isEmpty) ? '${languageProvider.translate('register_names')} es requerido' : null,
               ),
               const SizedBox(height: 14),
               AppTextField(
-                etiqueta: 'Apellidos',
+                etiqueta: languageProvider.translate('register_lastnames'),
                 controller: _apellidos,
-                validador: (v) => (v == null || v.trim().isEmpty) ? 'Ingresa tus apellidos' : null,
+                validador: (v) => (v == null || v.trim().isEmpty) ? '${languageProvider.translate('register_lastnames')} es requerido' : null,
               ),
               const SizedBox(height: 14),
               AppTextField(
-                etiqueta: 'Número de teléfono',
+                etiqueta: languageProvider.translate('register_phone'),
                 controller: _telefono,
                 tipoTeclado: TextInputType.phone,
-                validador: (v) => (v == null || v.trim().isEmpty) ? 'Ingresa tu teléfono' : null,
+                validador: (v) => (v == null || v.trim().isEmpty) ? '${languageProvider.translate('register_phone')} es requerido' : null,
               ),
               const SizedBox(height: 14),
               AppTextField(
-                etiqueta: 'Correo (opcional)',
+                etiqueta: languageProvider.translate('register_email_optional'),
                 controller: _correo,
                 tipoTeclado: TextInputType.emailAddress,
               ),
               const SizedBox(height: 14),
               AppTextField(
-                etiqueta: 'Contraseña',
+                etiqueta: languageProvider.translate('register_password'),
                 controller: _password,
                 esPassword: true,
-                validador: (v) => (v == null || v.length < 6) ? 'Mínimo 6 caracteres' : null,
+                validador: (v) => (v == null || v.length < 6)
+                    ? languageProvider.translate('validation_min_length')
+                    : null,
               ),
               const SizedBox(height: 14),
               
@@ -169,57 +168,48 @@ class _RegistroScreenState extends State<RegistroScreen> {
                 // Dropdown 1: Departamento
                 DropdownButtonFormField<Departamento>(
                   initialValue: _departamentoSeleccionado,
-                  decoration: const InputDecoration(labelText: 'Departamento'),
+                  decoration: InputDecoration(labelText: languageProvider.translate('register_department')),
                   items: _departamentos
                       .map((d) => DropdownMenuItem(value: d, child: Text(d.nombre)))
                       .toList(),
                   onChanged: _onDepartamentoChanged,
-                  validator: (v) => v == null ? 'Selecciona tu departamento' : null,
+                  validator: (v) => v == null ? languageProvider.translate('register_select_department') : null,
                 ),
                 const SizedBox(height: 14),
 
                 // Dropdown 2: Municipio (en cascada)
                 DropdownButtonFormField<Municipio>(
                   initialValue: _municipioSeleccionado,
-                  decoration: const InputDecoration(labelText: 'Municipio'),
+                  decoration: InputDecoration(labelText: languageProvider.translate('register_municipality')),
                   items: _municipiosDisponibles
                       .map((m) => DropdownMenuItem(value: m, child: Text(m.nombre)))
                       .toList(),
                   onChanged: _departamentoSeleccionado == null
                       ? null
                       : (v) => setState(() => _municipioSeleccionado = v),
-                  validator: (v) => v == null ? 'Selecciona tu municipio' : null,
+                  validator: (v) => v == null ? languageProvider.translate('register_select_municipio') : null,
                 ),
                 const SizedBox(height: 14),
 
                 // Dirección Exacta
                 AppTextField(
-                  etiqueta: 'Dirección exacta / Comarca',
+                  etiqueta: languageProvider.translate('register_exact_address'),
                   controller: _direccionExacta,
-                  validador: (v) => (v == null || v.trim().isEmpty) ? 'Ingresa tu dirección' : null,
+                  validador: (v) => (v == null || v.trim().isEmpty)
+                      ? '${languageProvider.translate('register_exact_address')} es requerido'
+                      : null,
                 ),
                 const SizedBox(height: 14),
 
-                // Dropdown 3: Idioma (Opcional)
-                DropdownButtonFormField<Idioma>(
-                  initialValue: _idiomaSeleccionado,
-                  decoration: const InputDecoration(labelText: 'Idioma preferido (opcional)'),
-                  items: _idiomas
-                      .map((i) => DropdownMenuItem(value: i, child: Text(i.nombre)))
-                      .toList(),
-                  onChanged: (v) => setState(() => _idiomaSeleccionado = v),
-                ),
               ],
 
               const SizedBox(height: 14),
-              Text('Género', style: AppTextStyles.etiqueta),
+              Text(languageProvider.translate('register_gender'), style: AppTextStyles.etiqueta),
               Row(
                 children: [
-                  ChoiceChip(label: const Text('Femenino'), selected: _genero == 'F', onSelected: (_) => setState(() => _genero = 'F')),
+                  ChoiceChip(label: Text(languageProvider.translate('register_female')), selected: _genero == 'F', onSelected: (_) => setState(() => _genero = 'F')),
                   const SizedBox(width: 8),
-                  ChoiceChip(label: const Text('Masculino'), selected: _genero == 'M', onSelected: (_) => setState(() => _genero = 'M')),
-                  const SizedBox(width: 8),
-                  ChoiceChip(label: const Text('Otro'), selected: _genero == 'O', onSelected: (_) => setState(() => _genero = 'O')),
+                  ChoiceChip(label: Text(languageProvider.translate('register_male')), selected: _genero == 'M', onSelected: (_) => setState(() => _genero = 'M')),
                 ],
               ),
               const SizedBox(height: 8),
@@ -228,11 +218,11 @@ class _RegistroScreenState extends State<RegistroScreen> {
                 value: _esProductora,
                 onChanged: (v) => setState(() => _esProductora = v),
                 activeThumbColor: AppColors.verdeMilpa,
-                title: const Text('Voy a publicar productos para trueque'),
-                subtitle: const Text('Puedes cambiarlo luego desde tu perfil'),
+                title: Text(languageProvider.translate('register_publish_swap')),
+                subtitle: Text(languageProvider.translate('register_publish_swap_subtitle')),
               ),
               const SizedBox(height: 24),
-              AppButton(texto: 'Crear cuenta', onPressed: _registrar, cargando: _cargando),
+              AppButton(texto: languageProvider.translate('register_create_account'), onPressed: _registrar, cargando: _cargando),
               const SizedBox(height: 24),
             ],
           ),
