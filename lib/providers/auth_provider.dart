@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import '../models/usuario.dart';
 import '../services/auth_service.dart';
@@ -61,6 +63,30 @@ class AuthProvider extends ChangeNotifier {
     await _authService.logout();
     usuario = null;
     estado = EstadoSesion.invitada;
+    notifyListeners();
+  }
+
+  Future<void> actualizarPerfil({
+    required String nombres,
+    required String apellidos,
+    required String telefono,
+    String? correo,
+    required String direccionExacta,
+  }) async {
+    usuario = await _authService.actualizarPerfil(
+      nombres: nombres,
+      apellidos: apellidos,
+      telefono: telefono,
+      correo: correo,
+      direccionExacta: direccionExacta,
+    );
+    notifyListeners();
+  }
+
+  /// Actualizar la foto de perfil del usuario
+  Future<void> actualizarFotoPerfil(String rutaImagen) async {
+    final archivo = File(rutaImagen);
+    usuario = await _authService.actualizarFotoPerfil(archivo);
     notifyListeners();
   }
 }

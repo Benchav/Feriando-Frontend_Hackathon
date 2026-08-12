@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import '../models/usuario.dart';
 import 'api_client.dart';
 import 'session_service.dart';
@@ -46,5 +48,50 @@ class AuthService {
     return usuario;
   }
 
+  Future<Usuario> actualizarPerfil({
+    required String nombres,
+    required String apellidos,
+    required String telefono,
+    String? correo,
+    required String direccionExacta,
+  }) async {
+    final data = await _api.put(
+      '/usuarios/perfil',
+      {
+        'nombres': nombres,
+        'apellidos': apellidos,
+        'telefono': telefono,
+        'correo': correo,
+        'direccionExacta': direccionExacta,
+      },
+    );
+
+    final usuario = Usuario.fromJson(data);
+    await SessionService.guardarUsuario(usuario);
+    return usuario;
+  }
+
+  Future<void> actualizarIdiomaPreferido(int idiomaID) async {
+    await _api.put(
+      '/usuarios/idioma',
+      {'idiomaID': idiomaID},
+    );
+  }
+
   Future<void> logout() => SessionService.cerrarSesion();
+
+  /// UPDATE — actualizar foto de perfil del usuario
+  Future<Usuario> actualizarFotoPerfil(File imagenArchivo) async {
+    final fields = <String, String>{};
+    final files = [imagenArchivo];
+    final data = await _api.putMultipart(
+      '/usuarios/fotoPerfil',
+      fields: fields,
+      files: files,
+      fileFieldName: 'fotoPerfil',
+    );
+    final usuario = Usuario.fromJson(data);
+    await SessionService.guardarUsuario(usuario);
+    return usuario;
+  }
 }

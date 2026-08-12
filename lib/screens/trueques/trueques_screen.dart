@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../models/trueque.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/language_provider.dart';
 import '../../providers/trueque_provider.dart';
 import '../../services/api_client.dart';
 import '../../theme/app_colors.dart';
@@ -37,23 +38,25 @@ class _TruequesScreenState extends State<TruequesScreen> with SingleTickerProvid
   }
 
   Future<void> _responder(Trueque trueque, bool aceptar) async {
+    final lang = context.read<LanguageProvider>();
     try {
       await context.read<TruequeProvider>().responder(trueque.truequeID, aceptar: aceptar);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(aceptar ? 'Solicitud aceptada.' : 'Solicitud rechazada.')),
+          SnackBar(content: Text(aceptar ? lang.translate('request_accepted') : lang.translate('request_rejected'))),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e is ApiException ? e.mensaje : 'No se pudo responder.')),
+          SnackBar(content: Text(e is ApiException ? e.mensaje : lang.translate('request_response_error'))),
         );
       }
     }
   }
 
   Future<void> _valorar(Trueque trueque) async {
+    final lang = context.read<LanguageProvider>();
     int puntuacion = 5;
     final comentario = TextEditingController();
     try {
@@ -61,7 +64,7 @@ class _TruequesScreenState extends State<TruequesScreen> with SingleTickerProvid
         context: context,
         builder: (context) => StatefulBuilder(
           builder: (context, setStateDialog) => AlertDialog(
-            title: const Text('Valorar intercambio'),
+            title: Text(lang.translate('trades_rating_title')),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -78,13 +81,13 @@ class _TruequesScreenState extends State<TruequesScreen> with SingleTickerProvid
                 const SizedBox(height: 8),
                 TextField(
                   controller: comentario,
-                  decoration: const InputDecoration(labelText: 'Comentario (opcional)'),
+                  decoration: InputDecoration(labelText: lang.translate('trades_comment_optional')),
                 ),
               ],
             ),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancelar')),
-              TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Enviar')),
+              TextButton(onPressed: () => Navigator.pop(context, false), child: Text(lang.translate('cancel'))),
+              TextButton(onPressed: () => Navigator.pop(context, true), child: Text(lang.translate('send'))),
             ],
           ),
         ),
@@ -99,13 +102,13 @@ class _TruequesScreenState extends State<TruequesScreen> with SingleTickerProvid
             );
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('¡Gracias por tu valoración!')),
+            SnackBar(content: Text(lang.translate('trades_thanks'))),
           );
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(e is ApiException ? e.mensaje : 'No se pudo enviar la valoración.')),
+            SnackBar(content: Text(e is ApiException ? e.mensaje : lang.translate('request_feedback_error'))),
           );
         }
       }
@@ -116,6 +119,7 @@ class _TruequesScreenState extends State<TruequesScreen> with SingleTickerProvid
 
   @override
   Widget build(BuildContext context) {
+    final lang = context.watch<LanguageProvider>();
     final usuarioID = context.watch<AuthProvider>().usuario?.usuarioID ?? 0;
     final provider = context.watch<TruequeProvider>();
 
@@ -124,15 +128,15 @@ class _TruequesScreenState extends State<TruequesScreen> with SingleTickerProvid
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Mis trueques'),
+        title: Text(lang.translate('trades_title')),
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: Colors.white,
           labelColor: Colors.white,
           unselectedLabelColor: Colors.white70,
           tabs: [
-            Tab(text: 'Recibidas (${recibidas.length})'),
-            Tab(text: 'Enviadas (${enviadas.length})'),
+            Tab(text: '${lang.translate('trades_tab_received')} (${recibidas.length})'),
+            Tab(text: '${lang.translate('trades_tab_sent')} (${enviadas.length})'),
           ],
         ),
       ),
@@ -149,13 +153,12 @@ class _TruequesScreenState extends State<TruequesScreen> with SingleTickerProvid
   }
 
   Widget _lista(List<Trueque> trueques, {required bool esRecibida, required int usuarioID}) {
+    final lang = context.watch<LanguageProvider>();
     if (trueques.isEmpty) {
       return EmptyState(
         icono: Icons.sync_alt,
-        titulo: esRecibida ? 'No has recibido solicitudes' : 'No has enviado solicitudes',
-        mensaje: esRecibida
-            ? 'Cuando alguien quiera uno de tus productos, aparecerá aquí.'
-            : 'Explora el catálogo y solicita tu primer trueque.',
+        titulo: esRecibida ? lang.translate('trades_no_received') : lang.translate('trades_no_sent'),
+        mensaje: esRecibida ? lang.translate('trades_no_received_message') : lang.translate('trades_no_sent_message'),
       );
     }
     return RefreshIndicator(
@@ -187,7 +190,7 @@ class _TruequesScreenState extends State<TruequesScreen> with SingleTickerProvid
                     ],
                   ),
                   const SizedBox(height: 4),
-                  Text('Con: $otraPersona', style: AppTextStyles.caption),
+                  Text('${lang.translate('trades_with')} $otraPersona', style: AppTextStyles.caption),
                   Text(_formatoFecha.format(t.fechaSolicitud), style: AppTextStyles.caption),
                   if (t.lugarEncuentro != null && t.lugarEncuentro!.isNotEmpty) ...[
                     const SizedBox(height: 8),
@@ -203,7 +206,7 @@ class _TruequesScreenState extends State<TruequesScreen> with SingleTickerProvid
                           const SizedBox(width: 6),
                           Expanded(
                             child: Text(
-                              'Punto de encuentro: ${t.lugarEncuentro}',
+                              '${lang.translate('trades_meeting_point')} ${t.lugarEncuentro}',
                               style: AppTextStyles.caption.copyWith(
                                 color: AppColors.textoPrimario,
                                 fontWeight: FontWeight.w500,
@@ -221,14 +224,14 @@ class _TruequesScreenState extends State<TruequesScreen> with SingleTickerProvid
                         Expanded(
                           child: OutlinedButton(
                             onPressed: () => _responder(t, false),
-                            child: const Text('Rechazar'),
+                            child: Text(lang.translate('reject')),
                           ),
                         ),
                         const SizedBox(width: 10),
                         Expanded(
                           child: ElevatedButton(
                             onPressed: () => _responder(t, true),
-                            child: const Text('Aceptar'),
+                            child: Text(lang.translate('accept')),
                           ),
                         ),
                       ],
@@ -237,7 +240,7 @@ class _TruequesScreenState extends State<TruequesScreen> with SingleTickerProvid
                   if (t.estado == 'Aceptado') ...[
                     const SizedBox(height: 12),
                     AppOutlineChip(
-                      texto: 'Valorar intercambio',
+                      texto: lang.translate('trades_rating_title'),
                       onTap: () => _valorar(t),
                     ),
                   ],

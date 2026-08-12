@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import '../../models/trueque.dart';
+import '../../providers/language_provider.dart';
 import '../../services/notificacion_service.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
@@ -39,6 +41,7 @@ class _NotificacionesScreenState extends State<NotificacionesScreen> {
   }
 
   Future<void> _marcarLeida(Notificacion n) async {
+    final lang = context.read<LanguageProvider>();
     if (n.leido) return;
     try {
       await _service.marcarLeida(n.notificacionID);
@@ -46,7 +49,7 @@ class _NotificacionesScreenState extends State<NotificacionesScreen> {
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No se pudo actualizar la notificacion.')),
+          SnackBar(content: Text(lang.translate('notifications_update_error'))),
         );
       }
     }
@@ -54,15 +57,16 @@ class _NotificacionesScreenState extends State<NotificacionesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final lang = context.watch<LanguageProvider>();
     return Scaffold(
-      appBar: AppBar(title: const Text('Notificaciones')),
+      appBar: AppBar(title: Text(lang.translate('notifications_title'))),
       body: _cargando
           ? const Center(child: CircularProgressIndicator(color: AppColors.verdeMilpa))
           : _notificaciones.isEmpty
-              ? const EmptyState(
+              ? EmptyState(
                   icono: Icons.notifications_none,
-                  titulo: 'Sin notificaciones',
-                  mensaje: 'Aquí verás avisos sobre tus solicitudes de trueque.',
+                  titulo: lang.translate('notifications_empty_title'),
+                  mensaje: lang.translate('notifications_empty_message'),
                 )
               : RefreshIndicator(
                   onRefresh: _cargar,

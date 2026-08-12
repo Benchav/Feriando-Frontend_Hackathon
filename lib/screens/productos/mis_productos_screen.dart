@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/producto.dart';
+import '../../providers/language_provider.dart';
 import '../../providers/producto_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
@@ -25,19 +26,20 @@ class _MisProductosScreenState extends State<MisProductosScreen> {
   }
 
   Future<void> _confirmarEliminar(Producto producto) async {
+    final lang = context.read<LanguageProvider>();
     final confirmar = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Eliminar producto'),
-        content: Text('¿Seguro que quieres eliminar "${producto.nombre}"? Esta acción no se puede deshacer.'),
+        title: Text(lang.translate('confirm_delete_title')),
+        content: Text(lang.translate('confirm_delete_message').replaceFirst('{name}', producto.nombre)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
+            child: Text(lang.translate('cancel')),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Eliminar', style: TextStyle(color: AppColors.error)),
+            child: Text(lang.translate('delete'), style: const TextStyle(color: AppColors.error)),
           ),
         ],
       ),
@@ -47,7 +49,7 @@ class _MisProductosScreenState extends State<MisProductosScreen> {
       await context.read<ProductoProvider>().eliminar(producto.productoID);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Producto eliminado.')),
+          SnackBar(content: Text(lang.translate('product_deleted'))),
         );
       }
     }
@@ -66,13 +68,14 @@ class _MisProductosScreenState extends State<MisProductosScreen> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<ProductoProvider>();
+    final lang = context.watch<LanguageProvider>();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Mis productos')),
+      appBar: AppBar(title: Text(context.watch<LanguageProvider>().translate('my_products_title'))),
       floatingActionButton: FloatingActionButton.extended(
         backgroundColor: AppColors.achiote,
         icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text('Publicar', style: TextStyle(color: Colors.white)),
+        label: Text(context.watch<LanguageProvider>().translate('publish_label'), style: const TextStyle(color: Colors.white)),
         onPressed: () async {
           await Navigator.of(context).push(
             MaterialPageRoute(builder: (_) => const PublicarProductoScreen()),
@@ -86,10 +89,10 @@ class _MisProductosScreenState extends State<MisProductosScreen> {
         child: provider.cargando && provider.misProductos.isEmpty
             ? const Center(child: CircularProgressIndicator(color: AppColors.verdeMilpa))
             : provider.misProductos.isEmpty
-                ? const EmptyState(
+                ? EmptyState(
                     icono: Icons.inventory_2_outlined,
-                    titulo: 'Aún no has publicado nada',
-                    mensaje: 'Toca "Publicar" para ofrecer tu primer producto en trueque.',
+                    titulo: context.watch<LanguageProvider>().translate('my_products_empty_title'),
+                    mensaje: context.watch<LanguageProvider>().translate('my_products_empty_message'),
                   )
                 : ListView.separated(
                     padding: const EdgeInsets.fromLTRB(16, 12, 16, 90),
@@ -142,7 +145,7 @@ class _MisProductosScreenState extends State<MisProductosScreen> {
                                 children: [
                                   TextButton.icon(
                                     icon: const Icon(Icons.edit_outlined, size: 18),
-                                    label: const Text('Editar'),
+                                    label: Text(lang.translate('edit_label')),
                                     onPressed: () async {
                                       await Navigator.of(context).push(
                                         MaterialPageRoute(
@@ -155,7 +158,7 @@ class _MisProductosScreenState extends State<MisProductosScreen> {
                                   ),
                                   TextButton.icon(
                                     icon: const Icon(Icons.delete_outline, size: 18, color: AppColors.error),
-                                    label: const Text('Eliminar', style: TextStyle(color: AppColors.error)),
+                                    label: Text(lang.translate('delete'), style: const TextStyle(color: AppColors.error)),
                                     onPressed: () => _confirmarEliminar(producto),
                                   ),
                                 ],

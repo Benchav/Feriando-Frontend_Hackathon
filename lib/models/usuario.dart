@@ -9,6 +9,7 @@ class Usuario {
   final String? direccionExacta;
   final bool esProductora;
   final String? fotoPerfil;
+  final int? idiomaPreferidoID;
   final double promedioValoracion;
 
   Usuario({
@@ -22,6 +23,7 @@ class Usuario {
     this.direccionExacta,
     required this.esProductora,
     this.fotoPerfil,
+    this.idiomaPreferidoID,
     this.promedioValoracion = 0,
   });
 
@@ -44,6 +46,7 @@ class Usuario {
         direccionExacta: json['direccionExacta'],
         esProductora: json['esProductora'] ?? true,
         fotoPerfil: json['fotoPerfil'],
+        idiomaPreferidoID: json['idiomaPreferidoID'],
         promedioValoracion: (json['promedioValoracion'] ?? 0).toDouble(),
       );
 
@@ -58,6 +61,7 @@ class Usuario {
         'direccionExacta': direccionExacta,
         'esProductora': esProductora,
         'fotoPerfil': fotoPerfil,
+        'idiomaPreferidoID': idiomaPreferidoID,
         'promedioValoracion': promedioValoracion,
       };
 }

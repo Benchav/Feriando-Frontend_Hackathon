@@ -22,5 +22,5 @@ class AppTextStyles {
   static TextStyle cuerpoDestacado = _cuerpo(size: 16, peso: FontWeight.w600);
   static TextStyle etiqueta = _cuerpo(size: 13, peso: FontWeight.w600, color: AppColors.textoSecundario);
   static TextStyle caption = _cuerpo(size: 12, peso: FontWeight.w400, color: AppColors.textoSecundario);
-  static TextStyle boton = _cuerpo(size: 16, peso: FontWeight.w600, color: AppColors.textoSobreOscuro);
+  static TextStyle boton = _cuerpo(size: 16, peso: FontWeight.w600, color: AppColors.textoPrimario);
 }

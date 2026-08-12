@@ -43,15 +43,19 @@ class ProductoCard extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 64,
-                height: 64,
-                decoration: BoxDecoration(
-                  color: AppColors.verdeMilpaSuave,
+              if (producto.imagenPrincipalUrl.isNotEmpty)
+                ClipRRect(
                   borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(_iconoCategoria, color: AppColors.verdeMilpa, size: 28),
-              ),
+                  child: Image.network(
+                    producto.imagenPrincipalUrl,
+                    width: 64,
+                    height: 64,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => _fallbackIcon(),
+                  ),
+                )
+              else
+                _fallbackIcon(),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -85,6 +89,18 @@ class ProductoCard extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _fallbackIcon() {
+    return Container(
+      width: 64,
+      height: 64,
+      decoration: BoxDecoration(
+        color: AppColors.verdeMilpaSuave,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Icon(_iconoCategoria, color: AppColors.verdeMilpa, size: 28),
     );
   }
 }
